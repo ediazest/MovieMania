@@ -35,6 +35,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+
+        <provider
+            android:name="com.development.edu.moviemania.data.MovieProvider"
+            android:authorities="com.development.edu.moviemania"
+            android:exported="false"
+            android:syncable="true" />
+
     </application>
 
 </manifest>

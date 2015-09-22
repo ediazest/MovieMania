@@ -7,11 +7,21 @@ import java.io.Serializable;
  */
 public class Movie implements Serializable {
 
+    protected int id;
     protected String poster;
     protected String title;
     protected String overview;
     protected float rating;
     protected String release;
+    protected int runtime;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getPoster() {
         return poster;
@@ -51,5 +61,13 @@ public class Movie implements Serializable {
 
     public void setRelease(String release) {
         this.release = release;
+    }
+
+    public int getRuntime() {
+        return runtime;
+    }
+
+    public void setRuntime(int runtime) {
+        this.runtime = runtime;
     }
 }

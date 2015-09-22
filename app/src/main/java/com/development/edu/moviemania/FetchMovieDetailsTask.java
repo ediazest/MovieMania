@@ -25,29 +25,27 @@ import java.util.List;
 /**
  * Created by edu on 26/08/2015.
  */
-public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
+public class FetchMovieDetailsTask extends AsyncTask<String, Void, Void> {
 
-    private static final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
+    private static final String LOG_TAG = FetchMovieDetailsTask.class.getSimpleName();
     private final Context mContext;
-    private final MovieAdapter mMovieAdapter;
 
-    public FetchMoviesTask(Context context, MovieAdapter movieAdapter) {
+    public FetchMovieDetailsTask(Context context) {
         mContext = context;
-        mMovieAdapter = movieAdapter;
     }
 
 
     @Override
-    protected List<Movie> doInBackground(String... params) {
+    protected Void doInBackground(String... params) {
         {
             Log.v(LOG_TAG, "" + params.length);
             if (params == null || params.length < 2)
                 return null;
 
-            String sortBy = params[0];
+            String movieId = params[0];
             String apiKey = params[1];
 
-            Log.v(LOG_TAG, "Parameters: " + sortBy + " , " + apiKey);
+            Log.v(LOG_TAG, "Parameters: " + movieId + " , " + apiKey);
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -58,14 +56,15 @@ public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
 
             try {
 
+                //http://api.themoviedb.org/3/movie/76341?api_key=103d17c09399fc788a4e2f5f663fd1a8&append_to_response=trailers,reviews
                 final String MOVIE_LIST_BASE_URL =
-                        "http://api.themoviedb.org/3/discover/movie?";
-                final String SORTBY_PARAM = "sort_by";
+                        "http://api.themoviedb.org/";
                 final String API_KEY_PARAM = "api_key";
 
                 Uri builtUri = Uri.parse(MOVIE_LIST_BASE_URL).buildUpon()
-                        .appendQueryParameter(SORTBY_PARAM, sortBy)
+                        .appendPath(movieId)
                         .appendQueryParameter(API_KEY_PARAM, apiKey)
+                        .appendQueryParameter("append_to_response", "trailers,reviews")
                         .build();
 
 
@@ -128,7 +127,7 @@ public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
                 }
 
                 try {
-                    return getMoviesDataFromJson(moviesListJsonStr);
+                    getMoviesDataFromJson(moviesListJsonStr);
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, e.getMessage(), e);
                     e.printStackTrace();
@@ -177,12 +176,7 @@ public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
     }
 
     @Override
-    protected void onPostExecute(List<Movie> movies) {
-        if (movies != null) {
-
-            mMovieAdapter.clear();
-
-            mMovieAdapter.addAll(movies);
-        }
+    protected void onPostExecute(Void aVoid) {
+        super.onPostExecute(aVoid);
     }
 }
