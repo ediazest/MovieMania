@@ -1,17 +1,40 @@
 package com.development.edu.moviemania.data;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Created by edu on 27/08/2015.
  */
-public class Movie implements Serializable {
+public class Movie implements Parcelable {
 
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        @Override
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        @Override
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
     protected String poster;
     protected String title;
     protected String overview;
     protected float rating;
     protected String release;
+
+    public Movie() {
+    }
+
+    protected Movie(Parcel in) {
+        poster = in.readString();
+        title = in.readString();
+        overview = in.readString();
+        rating = in.readFloat();
+        release = in.readString();
+    }
 
     public String getPoster() {
         return poster;
@@ -51,5 +74,19 @@ public class Movie implements Serializable {
 
     public void setRelease(String release) {
         this.release = release;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(poster);
+        dest.writeString(title);
+        dest.writeString(overview);
+        dest.writeFloat(rating);
+        dest.writeString(release);
     }
 }

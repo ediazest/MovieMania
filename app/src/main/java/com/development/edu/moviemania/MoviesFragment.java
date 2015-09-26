@@ -1,8 +1,13 @@
 package com.development.edu.moviemania;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,11 +27,14 @@ public class MoviesFragment extends Fragment {
     public static final String MOVIE_ITEM = "MovieToShow";
     private static final String LOG_TAG = MoviesFragment.class.getSimpleName();
     private String SELECTED_KEY = "selected_position";
+    private String LIST_KEY = "movie_list";
 
     private MovieAdapter mMovieAdapter;
     private GridView mMovieGridView;
 
     private int mPosition = GridView.INVALID_POSITION;
+
+    private ArrayList<Movie> movieList;
 
     public MoviesFragment() {
     }
@@ -38,9 +46,19 @@ public class MoviesFragment extends Fragment {
 
         setRetainInstance(true);
 
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(SELECTED_KEY))
+                mPosition = savedInstanceState.getInt(SELECTED_KEY);
+            if (savedInstanceState.containsKey(LIST_KEY))
+                movieList = savedInstanceState.getParcelableArrayList(LIST_KEY);
+        }
+
+        if (movieList == null)
+            movieList = new ArrayList<Movie>();
+
         mMovieGridView = (GridView) view.findViewById(R.id.MoviesGridView);
 
-        mMovieAdapter = new MovieAdapter(getActivity(), new ArrayList<Movie>());
+        mMovieAdapter = new MovieAdapter(getActivity(), movieList);
 
         mMovieGridView.setAdapter(mMovieAdapter);
 
@@ -61,10 +79,6 @@ public class MoviesFragment extends Fragment {
             }
         });
 
-        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
-            mPosition = savedInstanceState.getInt(SELECTED_KEY);
-        }
-
         return view;
 
     }
@@ -75,6 +89,11 @@ public class MoviesFragment extends Fragment {
 
         if (mPosition != GridView.INVALID_POSITION)
             outState.putInt(SELECTED_KEY, mPosition);
+
+        movieList = mMovieAdapter.getMovies();
+        if (movieList != null)
+            outState.putParcelableArrayList(LIST_KEY, movieList);
+
 
         super.onSaveInstanceState(outState);
 
@@ -88,10 +107,38 @@ public class MoviesFragment extends Fragment {
 
 
     private void updateMovieList() {
-        FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
 
-        String sortBy = Utility.getPreferredSorter(getActivity());
-        String apiKey = getActivity().getString(R.string.api_key);
-        fmt.execute(sortBy, apiKey);
+        if (isNetworkAvailable()) {
+
+            if (movieList.isEmpty()) {
+
+                Log.d(LOG_TAG, "requesting movies to server");
+                FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
+
+                String sortBy = Utility.getPreferredSorter(getActivity());
+                String apiKey = getActivity().getString(R.string.api_key);
+                fmt.execute(sortBy, apiKey);
+            }
+
+        } else {
+
+            new AlertDialog.Builder(getActivity())
+                    .setTitle("Sorry, we need a network connection to show movies")
+                    .setMessage("Please come back when you have a network connection available")
+                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int which) {
+
+                        }
+                    })
+                    .show();
+        }
     }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
 }

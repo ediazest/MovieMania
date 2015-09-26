@@ -77,6 +77,10 @@ public class MovieAdapter extends BaseAdapter {
         notifyDataSetChanged();
     }
 
+    public ArrayList<Movie> getMovies() {
+        return mMovies;
+    }
+
     /**
      * Cache of the children views for a forecast list item.
      */

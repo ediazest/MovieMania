@@ -32,14 +32,14 @@ public class DetailFragment extends Fragment {
         TextView movieTitle = (TextView) view.findViewById(R.id.item_movie_title);
         ImageView moviePoster = (ImageView) view.findViewById(R.id.item_movie_poster);
         TextView movieRelease = (TextView) view.findViewById(R.id.item_movie_release);
-        TextView movieLength = (TextView) view.findViewById(R.id.item_movie_length);
+
         TextView movieRating = (TextView) view.findViewById(R.id.item_movie_rating);
         TextView movieOverview = (TextView) view.findViewById(R.id.item_movie_overview);
 
         // The detail Activity called via intent.  Inspect the intent for forecast data.
         Intent intent = getActivity().getIntent();
         if (intent != null && intent.hasExtra(MoviesFragment.MOVIE_ITEM)) {
-            mMovie = (Movie) intent.getSerializableExtra(MoviesFragment.MOVIE_ITEM);
+            mMovie = (Movie) intent.getParcelableExtra(MoviesFragment.MOVIE_ITEM);
 
             movieTitle.setText(mMovie.getTitle());
             movieRelease.setText(mMovie.getRelease());
