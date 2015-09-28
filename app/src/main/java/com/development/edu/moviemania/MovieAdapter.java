@@ -14,6 +14,9 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 /**
  * Created by edu on 27/08/2015.
  */
@@ -51,8 +54,7 @@ public class MovieAdapter extends BaseAdapter {
             convertView = LayoutInflater.from(mContext).inflate(R.layout.list_item_movie_poster, null);
 
             // if it's not recycled, initialize some attributes
-            holder = new ViewHolder();
-            holder.posterView = (ImageView) convertView.findViewById(R.id.list_item_poster);
+            holder = new ViewHolder(convertView);
             convertView.setTag(holder);
         } else
             holder = (ViewHolder) convertView.getTag();
@@ -85,11 +87,11 @@ public class MovieAdapter extends BaseAdapter {
      * Cache of the children views for a forecast list item.
      */
     public static class ViewHolder {
-        public ImageView posterView;
+        @Bind(R.id.list_item_poster)
+        ImageView posterView;
 
-        public ViewHolder() {
-//            View view}) {
-            // posterView = (ImageView) view.findViewById(R.id.list_item_poster);
+        public ViewHolder(View view) {
+            ButterKnife.bind(this, view);
         }
     }
 }

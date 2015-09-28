@@ -1,10 +1,7 @@
 package com.development.edu.moviemania;
 
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -19,6 +16,9 @@ import com.development.edu.moviemania.data.Movie;
 
 import java.util.ArrayList;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -26,13 +26,14 @@ public class MoviesFragment extends Fragment {
 
     public static final String MOVIE_ITEM = "MovieToShow";
     private static final String LOG_TAG = MoviesFragment.class.getSimpleName();
+    @Bind(R.id.MoviesGridView)
+    GridView movieGridView;
     private String SELECTED_KEY = "selected_position";
     private String LIST_KEY = "movie_list";
-
     private MovieAdapter mMovieAdapter;
-    private GridView mMovieGridView;
-
     private int mPosition = GridView.INVALID_POSITION;
+
+    private String mSortBy = "";
 
     private ArrayList<Movie> movieList;
 
@@ -46,6 +47,8 @@ public class MoviesFragment extends Fragment {
 
         setRetainInstance(true);
 
+        ButterKnife.bind(this, view);
+
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(SELECTED_KEY))
                 mPosition = savedInstanceState.getInt(SELECTED_KEY);
@@ -56,13 +59,11 @@ public class MoviesFragment extends Fragment {
         if (movieList == null)
             movieList = new ArrayList<Movie>();
 
-        mMovieGridView = (GridView) view.findViewById(R.id.MoviesGridView);
-
         mMovieAdapter = new MovieAdapter(getActivity(), movieList);
 
-        mMovieGridView.setAdapter(mMovieAdapter);
+        movieGridView.setAdapter(mMovieAdapter);
 
-        mMovieGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        movieGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
@@ -100,31 +101,31 @@ public class MoviesFragment extends Fragment {
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        updateMovieList();
+    public void onResume() {
+        super.onResume();
+
+        String sortBy = Utility.getPreferredSorter(getActivity());
+        if (!sortBy.equals(mSortBy)) {
+            mSortBy = sortBy;
+            updateMovieList(sortBy);
+        }
     }
 
+    private void updateMovieList(String sortBy) {
 
-    private void updateMovieList() {
+        if (Utility.isNetworkAvailable(getActivity())) {
 
-        if (isNetworkAvailable()) {
+            Log.d(LOG_TAG, "requesting movies to server");
+            FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
 
-            if (movieList.isEmpty()) {
-
-                Log.d(LOG_TAG, "requesting movies to server");
-                FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
-
-                String sortBy = Utility.getPreferredSorter(getActivity());
-                String apiKey = getActivity().getString(R.string.api_key);
-                fmt.execute(sortBy, apiKey);
-            }
+            String apiKey = getActivity().getString(R.string.api_key);
+            fmt.execute(sortBy, apiKey);
 
         } else {
 
             new AlertDialog.Builder(getActivity())
-                    .setTitle("Sorry, we need a network connection to show movies")
-                    .setMessage("Please come back when you have a network connection available")
+                    .setTitle(getString(R.string.network_connection_dialog_title))
+                    .setMessage(getString(R.string.network_connection_dialog_msg))
                     .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialog, int which) {
 
@@ -132,13 +133,6 @@ public class MoviesFragment extends Fragment {
                     })
                     .show();
         }
-    }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
 }

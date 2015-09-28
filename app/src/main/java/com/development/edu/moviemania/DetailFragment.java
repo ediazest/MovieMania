@@ -12,13 +12,27 @@ import android.widget.TextView;
 import com.development.edu.moviemania.data.Movie;
 import com.squareup.picasso.Picasso;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class DetailFragment extends Fragment {
 
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+    @Bind(R.id.item_movie_title)
+    TextView movieTitle;
+    @Bind(R.id.item_movie_poster)
+    ImageView moviePoster;
+    @Bind(R.id.item_movie_release)
+    TextView movieRelease;
+    @Bind(R.id.item_movie_rating)
+    TextView movieRating;
+    @Bind(R.id.item_movie_overview)
+    TextView movieOverview;
     private Movie mMovie;
+
 
     public DetailFragment() {
     }
@@ -29,14 +43,8 @@ public class DetailFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_detail, container, false);
 
-        TextView movieTitle = (TextView) view.findViewById(R.id.item_movie_title);
-        ImageView moviePoster = (ImageView) view.findViewById(R.id.item_movie_poster);
-        TextView movieRelease = (TextView) view.findViewById(R.id.item_movie_release);
+        ButterKnife.bind(this, view);
 
-        TextView movieRating = (TextView) view.findViewById(R.id.item_movie_rating);
-        TextView movieOverview = (TextView) view.findViewById(R.id.item_movie_overview);
-
-        // The detail Activity called via intent.  Inspect the intent for forecast data.
         Intent intent = getActivity().getIntent();
         if (intent != null && intent.hasExtra(MoviesFragment.MOVIE_ITEM)) {
             mMovie = (Movie) intent.getParcelableExtra(MoviesFragment.MOVIE_ITEM);
