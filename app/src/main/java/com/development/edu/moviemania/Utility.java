@@ -56,7 +56,6 @@ public class Utility {
 
     }
 
-
     public static boolean isNetworkAvailable(Activity callingActivity) {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) callingActivity.getSystemService(Context.CONNECTIVITY_SERVICE);

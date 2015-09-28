@@ -19,23 +19,28 @@ import com.development.edu.moviemania.data.MoviesContract;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MoviesFragment extends Fragment {
 
     private static final String LOG_TAG = MoviesFragment.class.getSimpleName();
+
+    @Bind(R.id.MoviesGridView)
+    GridView movieGridView;
+
     private String SELECTED_KEY = "selected_position";
     private String LIST_KEY = "movie_list";
-    private String SORT_BY_KEY = "sort_by";
 
     private MovieAdapter mMovieAdapter;
-    private GridView mMovieGridView;
-
     private int mPosition = GridView.INVALID_POSITION;
 
+    private String mSortBy = "";
+
     private ArrayList<Movie> movieList;
-    private String sortBy;
 
     public MoviesFragment() {
     }
@@ -47,25 +52,24 @@ public class MoviesFragment extends Fragment {
 
         setRetainInstance(true);
 
+        ButterKnife.bind(this, view);
+
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(SELECTED_KEY))
                 mPosition = savedInstanceState.getInt(SELECTED_KEY);
             if (savedInstanceState.containsKey(LIST_KEY))
                 movieList = savedInstanceState.getParcelableArrayList(LIST_KEY);
-            if (savedInstanceState.containsKey(SORT_BY_KEY))
-                sortBy = savedInstanceState.getString(SORT_BY_KEY);
+
         }
 
         if (movieList == null)
             movieList = new ArrayList<Movie>();
 
-        mMovieGridView = (GridView) view.findViewById(R.id.MoviesGridView);
-
         mMovieAdapter = new MovieAdapter(getActivity(), movieList);
 
-        mMovieGridView.setAdapter(mMovieAdapter);
+        movieGridView.setAdapter(mMovieAdapter);
 
-        mMovieGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        movieGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
@@ -87,8 +91,8 @@ public class MoviesFragment extends Fragment {
                 @Override
                 public void run() {
                     mPosition = 0;
-                    mMovieGridView.performItemClick(
-                            mMovieGridView.getChildAt(mPosition),
+                    movieGridView.performItemClick(
+                            movieGridView.getChildAt(mPosition),
                             mPosition, 0);
                 }
             });
@@ -109,61 +113,55 @@ public class MoviesFragment extends Fragment {
         if (movieList != null)
             outState.putParcelableArrayList(LIST_KEY, movieList);
 
-        if (sortBy != null)
-            outState.putString(SORT_BY_KEY, sortBy);
-
-
         super.onSaveInstanceState(outState);
 
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-        updateMovieList();
+    public void onResume() {
+        super.onResume();
+
+        String sortBy = Utility.getPreferredSorter(getActivity());
+        if (!sortBy.equals(mSortBy)) {
+            mSortBy = sortBy;
+            updateMovieList(sortBy);
+        }
     }
 
+    private void updateMovieList(String sortBy) {
 
-    private void updateMovieList() {
 
-        String tmpSortBy = Utility.getPreferredSorter(getActivity());
+        if (sortBy.equals(getString(R.string.pref_favourites))) {
 
-        if (!tmpSortBy.equals(sortBy)) {
-            movieList.clear();
-            if (tmpSortBy.equals(getString(R.string.pref_favourites))) {
+            Log.d(LOG_TAG, "list of favourite movies");
+            getFavouriteMovies();
 
-                Log.d(LOG_TAG, "list of favourite movies");
-                getFavouriteMovies();
+        } else {
+
+            if (Utility.isNetworkAvailable(getActivity())) {
+
+
+                Log.d(LOG_TAG, "requesting movies to server");
+                FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
+
+                String apiKey = getActivity().getString(R.string.api_key);
+                fmt.execute(sortBy, apiKey);
 
             } else {
 
-                if (Utility.isNetworkAvailable(getActivity())) {
+                new AlertDialog.Builder(getActivity())
+                        .setTitle(getString(R.string.network_connection_dialog_title))
+                        .setMessage(getString(R.string.network_connection_dialog_msg))
+                        .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
 
-                    if (movieList.isEmpty()) {
-
-                        Log.d(LOG_TAG, "requesting movies to server");
-                        FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
-
-                        String apiKey = getActivity().getString(R.string.api_key);
-                        fmt.execute(tmpSortBy, apiKey);
-                    }
-
-                } else {
-
-                    new AlertDialog.Builder(getActivity())
-                            .setTitle("Sorry, we need a network connection to show movies")
-                            .setMessage("Please come back when you have a network connection available")
-                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                                public void onClick(DialogInterface dialog, int which) {
-
-                                }
-                            })
-                            .show();
-                }
-
+                            }
+                        })
+                        .show();
             }
-            sortBy = tmpSortBy;
+
         }
+
     }
 
     private void getFavouriteMovies() {

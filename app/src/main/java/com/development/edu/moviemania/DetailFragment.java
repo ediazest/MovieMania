@@ -26,16 +26,40 @@ import com.development.edu.moviemania.data.Review;
 import com.development.edu.moviemania.data.Trailer;
 import com.squareup.picasso.Picasso;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class DetailFragment extends Fragment {
 
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+
+    @Bind(R.id.item_movie_title)
+    TextView movieTitle;
+
+    @Bind(R.id.item_movie_poster)
+    ImageView moviePoster;
+
+    @Bind(R.id.item_movie_release)
+    TextView movieRelease;
+
+    @Bind(R.id.item_movie_overview)
+    TextView movieOverview;
+
+    @Bind(R.id.item_movie_length)
+    TextView movieLength;
+
+    @Bind(R.id.item_movie_ratingBar)
+    RatingBar movieRatingBar;
+
+    @Bind(R.id.item_movie_button)
+    ImageButton markAsFavourite;
+
     private Movie mMovie;
 
     private boolean isFavourite;
-
 
     private ShareActionProvider mShareActionProvider;
 
@@ -77,15 +101,7 @@ public class DetailFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_detail, container, false);
 
-        TextView movieTitle = (TextView) view.findViewById(R.id.item_movie_title);
-        ImageView moviePoster = (ImageView) view.findViewById(R.id.item_movie_poster);
-        TextView movieRelease = (TextView) view.findViewById(R.id.item_movie_release);
-        TextView movieLength = (TextView) view.findViewById(R.id.item_movie_length);
-        TextView movieOverview = (TextView) view.findViewById(R.id.item_movie_overview);
-
-        RatingBar movieRatingBar = (RatingBar) view.findViewById(R.id.item_movie_ratingBar);
-
-        final ImageButton markAsFavourite = (ImageButton) view.findViewById(R.id.item_movie_button);
+        ButterKnife.bind(this, view);
 
 
         // The detail Activity called via intent.  Inspect the intent for forecast data.
