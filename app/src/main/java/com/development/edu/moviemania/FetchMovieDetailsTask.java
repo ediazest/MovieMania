@@ -6,6 +6,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.development.edu.moviemania.data.Movie;
+import com.development.edu.moviemania.data.Review;
+import com.development.edu.moviemania.data.Trailer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,48 +21,51 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by edu on 26/08/2015.
  */
-public class FetchMovieDetailsTask extends AsyncTask<String, Void, Void> {
+public class FetchMovieDetailsTask extends AsyncTask<String, Void, Movie> {
 
     private static final String LOG_TAG = FetchMovieDetailsTask.class.getSimpleName();
     private final Context mContext;
+    DetailsLoader mCallback;
+    private Movie mMovie;
 
-    public FetchMovieDetailsTask(Context context) {
+    public FetchMovieDetailsTask(Context context, Movie movie, DetailsLoader callback) {
         mContext = context;
+        mMovie = movie;
+        mCallback = callback;
+
     }
 
 
     @Override
-    protected Void doInBackground(String... params) {
+    protected Movie doInBackground(String... params) {
         {
             Log.v(LOG_TAG, "" + params.length);
-            if (params == null || params.length < 2)
+            if (params == null || params.length < 1)
                 return null;
 
-            String movieId = params[0];
-            String apiKey = params[1];
+            String apiKey = params[0];
 
-            Log.v(LOG_TAG, "Parameters: " + movieId + " , " + apiKey);
+            Log.v(LOG_TAG, "Parameters: " + mMovie.getId() + " , " + apiKey);
             // These two need to be declared outside the try/catch
             // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
             BufferedReader reader = null;
 
             // Will contain the raw JSON response as a string.
-            String moviesListJsonStr = null;
+            String movieDetailsJsonStr = null;
 
             try {
 
                 //http://api.themoviedb.org/3/movie/76341?api_key=103d17c09399fc788a4e2f5f663fd1a8&append_to_response=trailers,reviews
                 final String MOVIE_LIST_BASE_URL =
-                        "http://api.themoviedb.org/";
+                        "http://api.themoviedb.org/3/movie/";
                 final String API_KEY_PARAM = "api_key";
 
+                String movieId = String.valueOf(mMovie.getId());
                 Uri builtUri = Uri.parse(MOVIE_LIST_BASE_URL).buildUpon()
                         .appendPath(movieId)
                         .appendQueryParameter(API_KEY_PARAM, apiKey)
@@ -99,8 +104,8 @@ public class FetchMovieDetailsTask extends AsyncTask<String, Void, Void> {
                     Log.v(LOG_TAG, "buffer empty");
                     return null;
                 }
-                moviesListJsonStr = buffer.toString();
-                Log.v(LOG_TAG, moviesListJsonStr);
+                movieDetailsJsonStr = buffer.toString();
+                Log.v(LOG_TAG, movieDetailsJsonStr);
 
             } catch (MalformedURLException e) {
                 Log.e(LOG_TAG, "Error ", e);
@@ -127,7 +132,7 @@ public class FetchMovieDetailsTask extends AsyncTask<String, Void, Void> {
                 }
 
                 try {
-                    getMoviesDataFromJson(moviesListJsonStr);
+                    return getMovieDetailsFromJson(movieDetailsJsonStr);
                 } catch (JSONException e) {
                     Log.e(LOG_TAG, e.getMessage(), e);
                     e.printStackTrace();
@@ -137,46 +142,69 @@ public class FetchMovieDetailsTask extends AsyncTask<String, Void, Void> {
         return null;
     }
 
-    private List<Movie> getMoviesDataFromJson(String moviesListJsonStr) throws JSONException {
-
-        List<Movie> movies = new ArrayList<Movie>();
+    private Movie getMovieDetailsFromJson(String moviesListJsonStr) throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
-        final String TMDB_LIST = "results";
+        final String TMDB_LENGHT = "runtime";
 
-        final String TMDB_POSTER_PATH = "poster_path";
-        final String TMDB_TITLE = "original_title";
-        final String TMDB_OVERVIEW = "overview";
-        final String TMDB_RATING = "vote_average";
-        final String TMDB_RELEASE = "release_date";
-        final String TMDB_ID = "id";
+        final String TMDB_TRAILER = "trailers";
+        final String TMDB_TRAILER_YOUTUBE = "youtube";
+        final String TMDB_TRAILER_YOUTUBE_NAME = "name";
+        final String TMDB_TRAILER_YOUTUBE_SOURCE = "source";
 
-        JSONObject moviesJson = new JSONObject(moviesListJsonStr);
-        JSONArray moviesArray = moviesJson.getJSONArray(TMDB_LIST);
+        final String TMDB_REVIEWS = "reviews";
+        final String TMDB_REVIEWS_RESULTS = "results";
+        final String TMDB_REVIEWS_RESULTS_AUTHOR = "author";
+        final String TMDB_REVIEWS_RESULTS_CONTENT = "content";
 
-        for (int i = 0; i < moviesArray.length(); i++) {
+        Movie result = new Movie();
+
+        JSONObject movieDetailsJson = new JSONObject(moviesListJsonStr);
+
+        result.setRuntime(movieDetailsJson.getInt(TMDB_LENGHT));
+
+        JSONObject movieTrailersJson = movieDetailsJson.getJSONObject(TMDB_TRAILER);
+        JSONArray movieYoutubeTrailersArray = movieTrailersJson.getJSONArray(TMDB_TRAILER_YOUTUBE);
+
+        for (int i = 0; i < movieYoutubeTrailersArray.length(); i++) {
 
             // Get the JSON object representing the day
-            JSONObject movieJson = moviesArray.getJSONObject(i);
+            JSONObject movieTrailerJson = movieYoutubeTrailersArray.getJSONObject(i);
+            Trailer trailer = new Trailer();
+            trailer.setName(movieTrailerJson.getString(TMDB_TRAILER_YOUTUBE_NAME));
+            trailer.setUrl("https://www.youtube.com/watch?v=" + movieTrailerJson.getString(TMDB_TRAILER_YOUTUBE_SOURCE));
 
-            Movie movie = new Movie();
-
-            movie.setId(movieJson.getInt(TMDB_ID));
-            movie.setPoster(movieJson.getString(TMDB_POSTER_PATH));
-            movie.setTitle(movieJson.getString(TMDB_TITLE));
-            movie.setOverview(movieJson.getString(TMDB_OVERVIEW));
-            movie.setRating((float) movieJson.getDouble(TMDB_RATING));
-            movie.setRelease(movieJson.getString(TMDB_RELEASE));
-
-            movies.add(movie);
-
+            result.getTrailers().add(trailer);
         }
 
-        return movies;
+        JSONObject movieReviewsJson = movieDetailsJson.getJSONObject(TMDB_REVIEWS);
+        JSONArray movieReviewsResultJson = movieReviewsJson.getJSONArray(TMDB_REVIEWS_RESULTS);
+
+        for (int i = 0; i < movieReviewsResultJson.length(); i++) {
+
+            // Get the JSON object representing the day
+            JSONObject movieReviewJson = movieReviewsResultJson.getJSONObject(i);
+            Review review = new Review();
+            review.setAuthor(movieReviewJson.getString(TMDB_REVIEWS_RESULTS_AUTHOR));
+            review.setContent(movieReviewJson.getString(TMDB_REVIEWS_RESULTS_CONTENT));
+
+            result.getReviews().add(review);
+        }
+
+        return result;
     }
 
     @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
+    protected void onPostExecute(Movie movie) {
+        super.onPostExecute(movie);
+
+        movie.setRating(mMovie.getRating());
+        movie.setPoster(mMovie.getPoster());
+        movie.setOverview(mMovie.getOverview());
+        movie.setRelease(mMovie.getRelease());
+        movie.setId(mMovie.getId());
+        movie.setTitle(mMovie.getTitle());
+
+        mCallback.onMovieDetailsComplete(movie);
     }
 }

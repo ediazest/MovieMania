@@ -6,12 +6,30 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.development.edu.moviemania.data.Movie;
+
 public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+
+        if (savedInstanceState == null) {
+
+            Bundle arguments = new Bundle();
+            arguments.putParcelable(MainActivity.MOVIE_ITEM, (Movie) getIntent().getExtras().get(MainActivity.MOVIE_ITEM));
+
+            DetailFragment fragment = new DetailFragment();
+            fragment.setArguments(arguments);
+
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.movie_detail_container, fragment)
+                    .commit();
+        }
+
+        getSupportActionBar().setElevation(0f);
+
     }
 
 

@@ -3,15 +3,41 @@ package com.development.edu.moviemania;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+import com.development.edu.moviemania.data.Movie;
+
+public class MainActivity extends AppCompatActivity implements MoviesFragment.Callback, DetailsLoader {
+
+    public static final String MOVIE_ITEM = "MovieToShow";
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    private static boolean mTwoPane;
+    private final String DETAILFRAGMENT_TAG = "DFTAG";
+
+    public static boolean getTwoPane() {
+        return mTwoPane;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        if (findViewById(R.id.movie_detail_container) != null) {
+
+            mTwoPane = true;
+
+            if (savedInstanceState == null) {
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.movie_detail_container, new DetailFragment(), DETAILFRAGMENT_TAG)
+                        .commit();
+            }
+
+        } else {
+            mTwoPane = false;
+        }
     }
 
 
@@ -37,5 +63,52 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onItemSelected(Movie movie) {
+
+        if (Utility.isNetworkAvailable(this)) {
+
+            Log.d(LOG_TAG, "requesting movie details to server");
+            FetchMovieDetailsTask fmdt = new FetchMovieDetailsTask(this, movie, this);
+
+            String apiKey = this.getString(R.string.api_key);
+            fmdt.execute(apiKey);
+
+        } else {
+            showMovieDetails(movie);
+        }
+
+
+    }
+
+
+    private void showMovieDetails(Movie movie) {
+
+        if (mTwoPane) {
+
+            // Supply index input as an argument.
+            Bundle args = new Bundle();
+            args.putParcelable(MOVIE_ITEM, movie);
+
+            DetailFragment df = new DetailFragment();
+            df.setArguments(args);
+
+            getSupportFragmentManager().beginTransaction().replace(R.id.movie_detail_container, df, DETAILFRAGMENT_TAG).commit();
+
+        } else {
+            Intent intent = new Intent(this, DetailActivity.class).putExtra(MOVIE_ITEM, movie);
+            startActivity(intent);
+        }
+
+    }
+
+
+    @Override
+    public void onMovieDetailsComplete(Movie movie) {
+
+        showMovieDetails(movie);
+
     }
 }

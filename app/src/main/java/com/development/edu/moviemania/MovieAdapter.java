@@ -1,7 +1,6 @@
 package com.development.edu.moviemania;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +58,7 @@ public class MovieAdapter extends BaseAdapter {
 
 
         String imageUrl = "http://image.tmdb.org/t/p/w185/" + mMovies.get(position).getPoster();
-        Log.d(LOG_TAG, imageUrl);
+        //Log.d(LOG_TAG, imageUrl);
         Picasso.with(mContext).load(imageUrl).placeholder(R.drawable.abc_ic_menu_selectall_mtrl_alpha).into(holder.posterView);
 
         return convertView;
@@ -75,6 +74,10 @@ public class MovieAdapter extends BaseAdapter {
             mMovies.add(movie);
 
         notifyDataSetChanged();
+    }
+
+    public ArrayList<Movie> getMovies() {
+        return mMovies;
     }
 
     /**

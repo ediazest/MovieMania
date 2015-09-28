@@ -2,7 +2,7 @@
     <string name="app_name">MovieMania</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_detail">MovieDetail</string>
+    <string name="title_activity_detail"> </string>
 
     <!-- Key name for storing location in SharedPreferences [CHAR LIMIT=NONE] -->
     <string name="pref_sortby">sortby</string>
@@ -14,6 +14,7 @@
     <string name="pref_highest_rated_label">Highest-rated</string>
     <string name="pref_most_popular_label">Most popular</string>
     <string name="pref_favourites_label">Favourites</string>
+
 
     <string name="pref_sortby_key">sortby</string>
     <string name="pref_sortby_label">Sort by</string>

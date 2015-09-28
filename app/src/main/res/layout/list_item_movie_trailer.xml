@@ -3,5 +3,8 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:drawableLeft="@drawable/ic_play_btn"
-    android:text="blalblbalbal" />
+    android:drawablePadding="10dp"
+    android:padding="15dp"
+    android:textAppearance="?android:attr/textAppearanceMedium"
+    android:textColor="@drawable/text_color" />
 

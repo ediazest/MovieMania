@@ -1,9 +1,11 @@
 package com.development.edu.moviemania;
 
-import android.content.Intent;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,15 +24,18 @@ import java.util.List;
  */
 public class MoviesFragment extends Fragment {
 
-    public static final String MOVIE_ITEM = "MovieToShow";
     private static final String LOG_TAG = MoviesFragment.class.getSimpleName();
-    private static final String TAG = MoviesFragment.class.getSimpleName();
     private String SELECTED_KEY = "selected_position";
+    private String LIST_KEY = "movie_list";
+    private String SORT_BY_KEY = "sort_by";
 
     private MovieAdapter mMovieAdapter;
     private GridView mMovieGridView;
 
     private int mPosition = GridView.INVALID_POSITION;
+
+    private ArrayList<Movie> movieList;
+    private String sortBy;
 
     public MoviesFragment() {
     }
@@ -42,9 +47,21 @@ public class MoviesFragment extends Fragment {
 
         setRetainInstance(true);
 
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(SELECTED_KEY))
+                mPosition = savedInstanceState.getInt(SELECTED_KEY);
+            if (savedInstanceState.containsKey(LIST_KEY))
+                movieList = savedInstanceState.getParcelableArrayList(LIST_KEY);
+            if (savedInstanceState.containsKey(SORT_BY_KEY))
+                sortBy = savedInstanceState.getString(SORT_BY_KEY);
+        }
+
+        if (movieList == null)
+            movieList = new ArrayList<Movie>();
+
         mMovieGridView = (GridView) view.findViewById(R.id.MoviesGridView);
 
-        mMovieAdapter = new MovieAdapter(getActivity(), new ArrayList<Movie>());
+        mMovieAdapter = new MovieAdapter(getActivity(), movieList);
 
         mMovieGridView.setAdapter(mMovieAdapter);
 
@@ -54,20 +71,28 @@ public class MoviesFragment extends Fragment {
 
                 Log.d(LOG_TAG, "click on " + position);
 
+
                 Movie movie = mMovieAdapter.getItem(position);
 
-                Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(MOVIE_ITEM, movie);
-                startActivity(intent);
+                ((Callback) getActivity()).onItemSelected(movie);
+
 
                 mPosition = position;
 
             }
         });
 
-        if (savedInstanceState != null && savedInstanceState.containsKey(SELECTED_KEY)) {
-            mPosition = savedInstanceState.getInt(SELECTED_KEY);
-        }
+        if (!MainActivity.getTwoPane() && movieList != null && !movieList.isEmpty() && mPosition == GridView.INVALID_POSITION)
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    mPosition = 0;
+                    mMovieGridView.performItemClick(
+                            mMovieGridView.getChildAt(mPosition),
+                            mPosition, 0);
+                }
+            });
+
 
         return view;
 
@@ -79,6 +104,14 @@ public class MoviesFragment extends Fragment {
 
         if (mPosition != GridView.INVALID_POSITION)
             outState.putInt(SELECTED_KEY, mPosition);
+
+        movieList = mMovieAdapter.getMovies();
+        if (movieList != null)
+            outState.putParcelableArrayList(LIST_KEY, movieList);
+
+        if (sortBy != null)
+            outState.putString(SORT_BY_KEY, sortBy);
+
 
         super.onSaveInstanceState(outState);
 
@@ -92,21 +125,45 @@ public class MoviesFragment extends Fragment {
 
 
     private void updateMovieList() {
-        String sortBy = Utility.getPreferredSorter(getActivity());
 
-        if (sortBy.equals(getString(R.string.pref_favourites))) {
+        String tmpSortBy = Utility.getPreferredSorter(getActivity());
 
-            Log.d(TAG, "list of favourite movies");
-            getFavouriteMovies();
+        if (!tmpSortBy.equals(sortBy)) {
+            movieList.clear();
+            if (tmpSortBy.equals(getString(R.string.pref_favourites))) {
 
-        } else {
+                Log.d(LOG_TAG, "list of favourite movies");
+                getFavouriteMovies();
 
-            FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
+            } else {
 
-            String apiKey = getActivity().getString(R.string.api_key);
-            fmt.execute(sortBy, apiKey);
+                if (Utility.isNetworkAvailable(getActivity())) {
+
+                    if (movieList.isEmpty()) {
+
+                        Log.d(LOG_TAG, "requesting movies to server");
+                        FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
+
+                        String apiKey = getActivity().getString(R.string.api_key);
+                        fmt.execute(tmpSortBy, apiKey);
+                    }
+
+                } else {
+
+                    new AlertDialog.Builder(getActivity())
+                            .setTitle("Sorry, we need a network connection to show movies")
+                            .setMessage("Please come back when you have a network connection available")
+                            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            })
+                            .show();
+                }
+
+            }
+            sortBy = tmpSortBy;
         }
-
     }
 
     private void getFavouriteMovies() {
@@ -155,5 +212,10 @@ public class MoviesFragment extends Fragment {
         }
 
         return movies;
+    }
+
+    public interface Callback {
+
+        public void onItemSelected(Movie movie);
     }
 }

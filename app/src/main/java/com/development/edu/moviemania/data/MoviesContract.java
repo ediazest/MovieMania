@@ -54,6 +54,9 @@ public class MoviesContract {
         // Poster is stored as a String
         public static final String COLUMN_MOVIE_POSTER = "movie_poster";
 
+        // Poster is stored as a Integer
+        public static final String COLUMN_MOVIE_RUNTIME = "movie_runtime";
+
         public static final Uri CONTENT_URI =
                 BASE_CONTENT_URI.buildUpon().appendPath(PATH_MOVIE).build();
 

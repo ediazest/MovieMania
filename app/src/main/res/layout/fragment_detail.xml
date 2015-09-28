@@ -20,9 +20,8 @@
                 android:id="@+id/item_movie_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@color/material_deep_teal_500"
+                android:background="@color/moviemania_light_green"
                 android:padding="50dp"
-                android:text="New Text"
                 android:textColor="@android:color/white"
                 android:textSize="30sp" />
 
@@ -48,29 +47,26 @@
                         android:id="@+id/item_movie_release"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Medium Text"
                         android:textAppearance="?android:attr/textAppearanceLarge" />
 
                     <TextView
                         android:id="@+id/item_movie_length"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Medium Text"
                         android:textAppearance="?android:attr/textAppearanceLarge" />
 
-                    <TextView
-                        android:id="@+id/item_movie_rating"
+                    <RatingBar
+                        android:id="@+id/item_movie_ratingBar"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Medium Text"
-                        android:textAppearance="?android:attr/textAppearanceLarge" />
+                        android:isIndicator="true"
+                        android:numStars="5" />
 
-                    <Button
+                    <ImageButton
                         android:id="@+id/item_movie_button"
-                        style="?android:attr/buttonStyleSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/favourite_button" />
+                        android:background="@null" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -80,34 +76,47 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="10dp"
-                android:text="Large Text"
                 android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            <LinearLayout
+                android:id="@+id/item_movie_trailer_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@android:color/black" />
+
+                <TextView
+                    android:id="@+id/item_movie_trailer_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:text="@string/trailer_label"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </LinearLayout>
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@android:color/black" />
 
-            <TextView
-                android:id="@+id/item_movie_trailer_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:text="@string/trailer_label"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
-
-            <View
+            <LinearLayout
+                android:id="@+id/item_movie_review_layout"
                 android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@android:color/black" />
+                android:layout_height="match_parent"
+                android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/item_movie_review_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="10dp"
-                android:text="@string/review_label"
-                android:textAppearance="?android:attr/textAppearanceMedium" />
+                <TextView
+                    android:id="@+id/item_movie_review_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="10dp"
+                    android:text="@string/review_label"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>
