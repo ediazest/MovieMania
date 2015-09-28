@@ -216,6 +216,6 @@ public class MoviesFragment extends Fragment {
 
     public interface Callback {
 
-        public void onItemSelected(Movie movie);
+        void onItemSelected(Movie movie);
     }
 }

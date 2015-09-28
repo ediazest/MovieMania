@@ -91,7 +91,7 @@ public class DetailFragment extends Fragment {
         // The detail Activity called via intent.  Inspect the intent for forecast data.
         Bundle arguments = getArguments();
         if (arguments != null) {
-            mMovie = (Movie) arguments.getParcelable(MainActivity.MOVIE_ITEM);
+            mMovie = arguments.getParcelable(MainActivity.MOVIE_ITEM);
 
             movieTitle.setText(mMovie.getTitle());
             movieRelease.setText(mMovie.getRelease().split("-")[0]);
