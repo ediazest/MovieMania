@@ -42,8 +42,6 @@ public class TestUriMatcher extends AndroidTestCase {
 
         assertEquals("Error: The MOVIE URI was matched incorrectly.",
                 testMatcher.match(TEST_MOVIE_DIR), MovieProvider.MOVIE);
-        assertEquals("Error: The MOVIE WITH ID URI was matched incorrectly.",
-                testMatcher.match(TEST_MOVIE_WITH_ID), MovieProvider.MOVIE_WITH_ID);
 
     }
 }

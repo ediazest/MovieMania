@@ -23,6 +23,7 @@ public class MovieAdapter extends BaseAdapter {
     private static final String LOG_TAG = MovieAdapter.class.getSimpleName();
     private final Context mContext;
     private ArrayList<Movie> mMovies;
+    private int mPosition = -1;
 
     public MovieAdapter(Context context, ArrayList<Movie> movies) {
         mContext = context;
@@ -44,6 +45,11 @@ public class MovieAdapter extends BaseAdapter {
         return 0;
     }
 
+    public void setPositionSelected(int position) {
+        mPosition = position;
+        this.notifyDataSetChanged();
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
 
@@ -58,10 +64,27 @@ public class MovieAdapter extends BaseAdapter {
         } else
             holder = (ViewHolder) convertView.getTag();
 
+        //check if the picture has been downloaded
+        if (Utility.hasExternalStoragePrivateFile(mContext, "img_" + mMovies.get(position).getId() + ".png")) {
 
-        String imageUrl = "http://image.tmdb.org/t/p/w185/" + mMovies.get(position).getPoster();
-        //Log.d(LOG_TAG, imageUrl);
-        Picasso.with(mContext).load(imageUrl).placeholder(R.drawable.abc_ic_menu_selectall_mtrl_alpha).into(holder.posterView);
+            Picasso.with(mContext).load(Utility.getBitmapFile(mContext, "img_" + mMovies.get(position).getId() + ".png"))
+                    .into(holder.posterView);
+
+        } else {
+
+            String imageUrl = Utility.POSTER_ROOT + mMovies.get(position).getPoster();
+            //Log.d(LOG_TAG, imageUrl);
+            Picasso.with(mContext).load(imageUrl).
+                    placeholder(R.drawable.abc_ic_menu_selectall_mtrl_alpha)
+                    .error(R.drawable.abc_ic_menu_selectall_mtrl_alpha)
+                    .into(holder.posterView);
+        }
+
+        if ((mPosition != -1) && (mPosition == position)) {
+            holder.selectedIndicator.setVisibility(View.VISIBLE);
+        } else {
+            holder.selectedIndicator.setVisibility(View.GONE);
+        }
 
         return convertView;
     }
@@ -83,11 +106,13 @@ public class MovieAdapter extends BaseAdapter {
     }
 
     /**
-     * Cache of the children views for a forecast list item.
+     * Cache of the children views for a movie list item.
      */
     public static class ViewHolder {
         @Bind(R.id.list_item_poster)
         ImageView posterView;
+        @Bind(R.id.list_item_selected)
+        View selectedIndicator;
 
         public ViewHolder(View view) {
             ButterKnife.bind(this, view);

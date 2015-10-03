@@ -29,10 +29,10 @@ public class FetchMovieDetailsTask extends AsyncTask<String, Void, Movie> {
 
     private static final String LOG_TAG = FetchMovieDetailsTask.class.getSimpleName();
     private final Context mContext;
-    DetailsLoader mCallback;
+    OnMovieDetailsListener mCallback;
     private Movie mMovie;
 
-    public FetchMovieDetailsTask(Context context, Movie movie, DetailsLoader callback) {
+    public FetchMovieDetailsTask(Context context, Movie movie, OnMovieDetailsListener callback) {
         mContext = context;
         mMovie = movie;
         mCallback = callback;
@@ -60,7 +60,7 @@ public class FetchMovieDetailsTask extends AsyncTask<String, Void, Movie> {
 
             try {
 
-                //http://api.themoviedb.org/3/movie/76341?api_key=103d17c09399fc788a4e2f5f663fd1a8&append_to_response=trailers,reviews
+                //http://api.themoviedb.org/3/movie/76341?api_key=XXXXX&append_to_response=trailers,reviews
                 final String MOVIE_LIST_BASE_URL =
                         "http://api.themoviedb.org/3/movie/";
                 final String API_KEY_PARAM = "api_key";

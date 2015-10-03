@@ -15,6 +15,8 @@ import android.widget.GridView;
 
 import com.development.edu.moviemania.data.Movie;
 import com.development.edu.moviemania.data.MoviesContract;
+import com.development.edu.moviemania.data.Review;
+import com.development.edu.moviemania.data.Trailer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,10 +24,7 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 
-/**
- * A placeholder fragment containing a simple view.
- */
-public class MoviesFragment extends Fragment {
+public class MoviesFragment extends Fragment implements OnMovieListListener {
 
     private static final String LOG_TAG = MoviesFragment.class.getSimpleName();
 
@@ -80,23 +79,17 @@ public class MoviesFragment extends Fragment {
 
                 ((Callback) getActivity()).onItemSelected(movie);
 
-
                 mPosition = position;
+
+                mMovieAdapter.setPositionSelected(mPosition);
 
             }
         });
 
-        if (!MainActivity.getTwoPane() && movieList != null && !movieList.isEmpty() && mPosition == GridView.INVALID_POSITION)
-            new Handler().post(new Runnable() {
-                @Override
-                public void run() {
-                    mPosition = 0;
-                    movieGridView.performItemClick(
-                            movieGridView.getChildAt(mPosition),
-                            mPosition, 0);
-                }
-            });
-
+        if (mPosition != GridView.INVALID_POSITION) {
+            movieGridView.smoothScrollToPosition(mPosition);
+            mMovieAdapter.setPositionSelected(mPosition);
+        }
 
         return view;
 
@@ -125,6 +118,13 @@ public class MoviesFragment extends Fragment {
         if (!sortBy.equals(mSortBy)) {
             mSortBy = sortBy;
             updateMovieList(sortBy);
+            mPosition = GridView.INVALID_POSITION;
+        }
+    }
+
+    public void refreshMovieList() {
+        if (mSortBy.equals(getString(R.string.pref_favourites))) {
+            updateMovieList(mSortBy);
         }
     }
 
@@ -142,7 +142,7 @@ public class MoviesFragment extends Fragment {
 
 
                 Log.d(LOG_TAG, "requesting movies to server");
-                FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter);
+                FetchMoviesTask fmt = new FetchMoviesTask(getActivity(), mMovieAdapter, this);
 
                 String apiKey = getActivity().getString(R.string.api_key);
                 fmt.execute(sortBy, apiKey);
@@ -173,13 +173,14 @@ public class MoviesFragment extends Fragment {
             mMovieAdapter.clear();
             mMovieAdapter.addAll(movies);
         }
+        onMovieListLoadComplete();
 
     }
 
     private List<Movie> fetchFavouriteMovies() {
 
         List<Movie> movies = null;
-        // A cursor is your primary interface to the query results.
+
         Cursor cursor = getActivity().getContentResolver().query(
                 MoviesContract.MovieEntry.CONTENT_URI,
                 null, // leaving "columns" null just returns all the columns.
@@ -201,6 +202,10 @@ public class MoviesFragment extends Fragment {
                 movie.setTitle(cursor.getString(cursor.getColumnIndex(MoviesContract.MovieEntry.COLUMN_MOVIE_TITLE)));
                 movie.setOverview(cursor.getString(cursor.getColumnIndex(MoviesContract.MovieEntry.COLUMN_MOVIE_OVERVIEW)));
                 movie.setPoster(cursor.getString(cursor.getColumnIndex(MoviesContract.MovieEntry.COLUMN_MOVIE_POSTER)));
+                movie.setRuntime(cursor.getInt(cursor.getColumnIndex(MoviesContract.MovieEntry.COLUMN_MOVIE_RUNTIME)));
+
+                movie.getTrailers().addAll(fetchTrailersFromMovie(movie.getId()));
+                movie.getReviews().addAll(fetchReviewsFromMovie(movie.getId()));
 
                 movies.add(movie);
 
@@ -212,8 +217,83 @@ public class MoviesFragment extends Fragment {
         return movies;
     }
 
-    public interface Callback {
+    private ArrayList<Trailer> fetchTrailersFromMovie(int movieId) {
 
-        void onItemSelected(Movie movie);
+        ArrayList<Trailer> trailers = new ArrayList<>();
+
+        String selection = MoviesContract.TrailerEntry.COLUMN_MOVIE_KEY + " = ?";
+        String[] selectionArgs = {String.valueOf(movieId)};
+
+        Cursor cursor = getActivity().getContentResolver().query(
+                MoviesContract.TrailerEntry.CONTENT_URI,
+                null, // leaving "columns" null just returns all the columns.
+                selection, // cols for "where" clause
+                selectionArgs, // values for "where" clause
+                null
+        );
+
+        if (cursor.moveToFirst()) {
+
+            do {
+                Trailer trailer = new Trailer();
+                trailer.setName(cursor.getString(cursor.getColumnIndex(MoviesContract.TrailerEntry.COLUMN_TRAILER_NAME)));
+                trailer.setUrl(cursor.getString(cursor.getColumnIndex(MoviesContract.TrailerEntry.COLUMN_TRAILER_URL)));
+
+                trailers.add(trailer);
+
+            } while (cursor.moveToNext());
+
+        }
+
+        return trailers;
+    }
+
+    private ArrayList<Review> fetchReviewsFromMovie(int movieId) {
+
+        ArrayList<Review> reviews = new ArrayList<>();
+
+        String selection = MoviesContract.TrailerEntry.COLUMN_MOVIE_KEY + " = ?";
+        String[] selectionArgs = {String.valueOf(movieId)};
+
+        Cursor cursor = getActivity().getContentResolver().query(
+                MoviesContract.ReviewEntry.CONTENT_URI,
+                null, // leaving "columns" null just returns all the columns.
+                selection, // cols for "where" clause
+                selectionArgs, // values for "where" clause
+                null
+        );
+
+        if (cursor.moveToFirst()) {
+
+            do {
+
+                Review review = new Review();
+                review.setAuthor(cursor.getString(cursor.getColumnIndex(MoviesContract.ReviewEntry.COLUMN_REVIEW_AUTHOR)));
+                review.setContent(cursor.getString(cursor.getColumnIndex(MoviesContract.ReviewEntry.COLUMN_REVIEW_CONTENT)));
+
+                reviews.add(review);
+
+            } while (cursor.moveToNext());
+
+        }
+
+        return reviews;
+    }
+
+    @Override
+    public void onMovieListLoadComplete() {
+        if (movieList != null && movieList.isEmpty())
+            movieList = mMovieAdapter.getMovies();
+        if (MainActivity.getTwoPane() && movieList != null && !movieList.isEmpty() && mPosition == GridView.INVALID_POSITION)
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    mPosition = 0;
+                    movieGridView.performItemClick(
+                            movieGridView.getChildAt(mPosition),
+                            mPosition, 0);
+                }
+            });
+
     }
 }

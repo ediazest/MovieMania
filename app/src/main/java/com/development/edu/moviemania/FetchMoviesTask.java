@@ -30,10 +30,12 @@ public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
     private static final String LOG_TAG = FetchMoviesTask.class.getSimpleName();
     private final Context mContext;
     private final MovieAdapter mMovieAdapter;
+    private final OnMovieListListener mOnMovieListListener;
 
-    public FetchMoviesTask(Context context, MovieAdapter movieAdapter) {
+    public FetchMoviesTask(Context context, MovieAdapter movieAdapter, OnMovieListListener onMovieListListener) {
         mContext = context;
         mMovieAdapter = movieAdapter;
+        mOnMovieListListener = onMovieListListener;
     }
 
 
@@ -183,6 +185,8 @@ public class FetchMoviesTask extends AsyncTask<String, Void, List<Movie>> {
             mMovieAdapter.clear();
 
             mMovieAdapter.addAll(movies);
+
         }
+        mOnMovieListListener.onMovieListLoadComplete();
     }
 }

@@ -274,6 +274,54 @@ public class TestDb extends AndroidTestCase {
 
     }
 
+    public long insertTrailer() {
+
+        long movieRowId = insertMovie();
+
+        // First step: Get reference to writable database
+        MovieDbHelper dbHelper = new MovieDbHelper(mContext);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        // Create ContentValues of what you want to insert
+        ContentValues testValues = TestUtilities.createTrailerValues(movieRowId);
+
+        // Insert ContentValues into database and get a row ID back
+
+        long trailerRowId;
+        trailerRowId = db.insert(TrailerEntry.TABLE_NAME, null, testValues);
+
+        // Verify we got a row back.
+        assertTrue("Error: Failure to insert Trailer Values", trailerRowId != -1);
+        db.close();
+
+        return trailerRowId;
+
+    }
+
+    public long insertReview() {
+
+        long movieRowId = insertMovie();
+
+        // First step: Get reference to writable database
+        MovieDbHelper dbHelper = new MovieDbHelper(mContext);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+        // Create ContentValues of what you want to insert
+        ContentValues testValues = TestUtilities.createReviewValues(movieRowId);
+
+        // Insert ContentValues into database and get a row ID back
+
+        long reviewRowId;
+        reviewRowId = db.insert(ReviewEntry.TABLE_NAME, null, testValues);
+
+        // Verify we got a row back.
+        assertTrue("Error: Failure to insert Review Values", reviewRowId != -1);
+        db.close();
+
+        return reviewRowId;
+
+    }
+
 }
 
 

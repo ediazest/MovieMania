@@ -9,6 +9,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.test.AndroidTestCase;
 
+import java.util.Random;
+
 /**
  * Created by edu on 31/08/2015.
  */
@@ -17,18 +19,20 @@ public class TestProvider extends AndroidTestCase {
     public static final String LOG_TAG = TestProvider.class.getSimpleName();
     static private final int BULK_INSERT_RECORDS_TO_INSERT = 10;
 
-    static ContentValues[] createBulkInsertMovieValues(long locationRowId) {
+    static ContentValues[] createBulkInsertMovieValues() {
 
         ContentValues[] returnContentValues = new ContentValues[BULK_INSERT_RECORDS_TO_INSERT];
 
         for (int i = 0; i < BULK_INSERT_RECORDS_TO_INSERT; i++) {
             ContentValues movieValues = new ContentValues();
-            movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_ID, locationRowId);
+            movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_ID, new Random().nextInt());
             movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_OVERVIEW, "Overview of the movie");
             movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_POSTER, "Url to poster");
             movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_RATING, 1.2 + 0.01 * (float) i);
             movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_RELEASE, "2015");
             movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_TITLE, "Awesome title");
+            movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_RUNTIME, 120);
+
             returnContentValues[i] = movieValues;
         }
         return returnContentValues;
@@ -55,10 +59,44 @@ public class TestProvider extends AndroidTestCase {
         assertEquals("Error: Records not deleted from Movie table during delete", 0, cursor.getCount());
         cursor.close();
 
+
+        mContext.getContentResolver().delete(
+                MoviesContract.TrailerEntry.CONTENT_URI,
+                null,
+                null
+        );
+
+        cursor = mContext.getContentResolver().query(
+                MoviesContract.TrailerEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals("Error: Records not deleted from Trailer table during delete", 0, cursor.getCount());
+        cursor.close();
+
+
+        mContext.getContentResolver().delete(
+                MoviesContract.ReviewEntry.CONTENT_URI,
+                null,
+                null
+        );
+
+        cursor = mContext.getContentResolver().query(
+                MoviesContract.ReviewEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null
+        );
+        assertEquals("Error: Records not deleted from Trailer table during delete", 0, cursor.getCount());
+        cursor.close();
+
     }
 
     /*
-      This helper function deletes all records from both database tables using the database
+      This helper function deletes all records from the database tables using the database
       functions only.  This is designed to be used to reset the state of the database until the
       delete functionality is available in the ContentProvider.
     */
@@ -67,6 +105,8 @@ public class TestProvider extends AndroidTestCase {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
         db.delete(MoviesContract.MovieEntry.TABLE_NAME, null, null);
+        db.delete(MoviesContract.TrailerEntry.TABLE_NAME, null, null);
+        db.delete(MoviesContract.ReviewEntry.TABLE_NAME, null, null);
         db.close();
     }
 
@@ -123,7 +163,7 @@ public class TestProvider extends AndroidTestCase {
        read out the data.  Uncomment this test to see if the basic weather query functionality
        given in the ContentProvider is working correctly.
     */
-    public void testBasicWeatherQuery() {
+    public void testBasicMovieQuery() {
         // insert our test records into the database
         MovieDbHelper dbHelper = new MovieDbHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -203,24 +243,30 @@ public class TestProvider extends AndroidTestCase {
     public void testDeleteRecords() {
         testInsertReadProvider();
 
-        // Register a content observer for our location delete.
-        TestUtilities.TestContentObserver locationObserver = TestUtilities.getTestContentObserver();
-        mContext.getContentResolver().registerContentObserver(MoviesContract.MovieEntry.CONTENT_URI, true, locationObserver);
+        // Register a content observer for our movie delete.
+        TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();
+        mContext.getContentResolver().registerContentObserver(MoviesContract.MovieEntry.CONTENT_URI, true, movieObserver);
 
-        // Register a content observer for our weather delete.
-        TestUtilities.TestContentObserver weatherObserver = TestUtilities.getTestContentObserver();
-        mContext.getContentResolver().registerContentObserver(MoviesContract.MovieEntry.CONTENT_URI, true, weatherObserver);
+        // Register a content observer for our trailer delete.
+//        TestUtilities.TestContentObserver trailerObserver = TestUtilities.getTestContentObserver();
+//        mContext.getContentResolver().registerContentObserver(MoviesContract.TrailerEntry.CONTENT_URI, true, trailerObserver);
+
+        // Register a content observer for our review delete.
+//        TestUtilities.TestContentObserver reviewObserver = TestUtilities.getTestContentObserver();
+//        mContext.getContentResolver().registerContentObserver(MoviesContract.ReviewEntry.CONTENT_URI, true, reviewObserver);
 
         deleteAllRecordsFromProvider();
 
         // Students: If either of these fail, you most-likely are not calling the
         // getContext().getContentResolver().notifyChange(uri, null); in the ContentProvider
         // delete.  (only if the insertReadProvider is succeeding)
-        locationObserver.waitForNotificationOrFail();
-        weatherObserver.waitForNotificationOrFail();
+        movieObserver.waitForNotificationOrFail();
+//        trailerObserver.waitForNotificationOrFail();
+//        reviewObserver.waitForNotificationOrFail();
 
-        mContext.getContentResolver().unregisterContentObserver(locationObserver);
-        mContext.getContentResolver().unregisterContentObserver(weatherObserver);
+        mContext.getContentResolver().unregisterContentObserver(movieObserver);
+//        mContext.getContentResolver().unregisterContentObserver(trailerObserver);
+//        mContext.getContentResolver().unregisterContentObserver(reviewObserver);
     }
 
     /*
@@ -244,7 +290,7 @@ public class TestProvider extends AndroidTestCase {
         // Now we can bulkInsert some weather.  In fact, we only implement BulkInsert for weather
         // entries.  With ContentProviders, you really only have to implement the features you
         // use, after all.
-        ContentValues[] bulkInsertContentValues = createBulkInsertMovieValues(123456);
+        ContentValues[] bulkInsertContentValues = createBulkInsertMovieValues();
 
         // Register a content observer for our bulk insert.
         TestUtilities.TestContentObserver movieObserver = TestUtilities.getTestContentObserver();

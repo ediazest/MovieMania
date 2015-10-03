@@ -5,7 +5,7 @@ import com.development.edu.moviemania.data.Movie;
 /**
  * Created by edu on 26/09/2015.
  */
-public interface DetailsLoader {
+public interface OnMovieDetailsListener {
 
     void onMovieDetailsComplete(Movie movie);
 

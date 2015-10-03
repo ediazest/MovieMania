@@ -9,7 +9,7 @@ import android.view.MenuItem;
 
 import com.development.edu.moviemania.data.Movie;
 
-public class MainActivity extends AppCompatActivity implements MoviesFragment.Callback, DetailsLoader {
+public class MainActivity extends AppCompatActivity implements Callback, OnMovieDetailsListener {
 
     public static final String MOVIE_ITEM = "MovieToShow";
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
@@ -83,6 +83,16 @@ public class MainActivity extends AppCompatActivity implements MoviesFragment.Ca
 
     }
 
+    @Override
+    public void onFavouriteItem(boolean isFavourite) {
+        if (!isFavourite) {
+
+            MoviesFragment moviesFragment = ((MoviesFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_main));
+            moviesFragment.refreshMovieList();
+
+        }
+    }
+
 
     private void showMovieDetails(Movie movie) {
 
@@ -94,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements MoviesFragment.Ca
 
             DetailFragment df = new DetailFragment();
             df.setArguments(args);
+            df.setTwoPanel(this);
 
             getSupportFragmentManager().beginTransaction().replace(R.id.movie_detail_container, df, DETAILFRAGMENT_TAG).commit();
 
@@ -104,11 +115,9 @@ public class MainActivity extends AppCompatActivity implements MoviesFragment.Ca
 
     }
 
-
     @Override
     public void onMovieDetailsComplete(Movie movie) {
 
         showMovieDetails(movie);
-
     }
 }

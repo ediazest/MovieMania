@@ -62,6 +62,7 @@ public class DetailFragment extends Fragment {
     private boolean isFavourite;
 
     private ShareActionProvider mShareActionProvider;
+    private Callback mCallback;
 
     public DetailFragment() {
         setHasOptionsMenu(true);
@@ -81,13 +82,13 @@ public class DetailFragment extends Fragment {
 
             // If onLoadFinished happens before this, we can go ahead and set the share intent now.
 
-            mShareActionProvider.setShareIntent(createShareForecastIntent());
+            mShareActionProvider.setShareIntent(createShareTrailerIntent());
 
         }
     }
 
 
-    private Intent createShareForecastIntent() {
+    private Intent createShareTrailerIntent() {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
         shareIntent.setType("text/plain");
@@ -104,7 +105,7 @@ public class DetailFragment extends Fragment {
         ButterKnife.bind(this, view);
 
 
-        // The detail Activity called via intent.  Inspect the intent for forecast data.
+        // The detail Activity called via intent.  Inspect the intent for movie data.
         Bundle arguments = getArguments();
         if (arguments != null) {
             mMovie = arguments.getParcelable(MainActivity.MOVIE_ITEM);
@@ -116,8 +117,16 @@ public class DetailFragment extends Fragment {
             float rating = (float) ((mMovie.getRating() * 5.0) / 10.0);
             movieRatingBar.setRating(rating);
 
-            String imageUrl = "http://image.tmdb.org/t/p/w185/" + mMovie.getPoster();
-            Picasso.with(getActivity()).load(imageUrl).placeholder(R.drawable.abc_ic_menu_selectall_mtrl_alpha).into(moviePoster);
+            //check if the picture has been downloaded
+            if (Utility.hasExternalStoragePrivateFile(getActivity(), "img_" + mMovie.getId() + ".png")) {
+                Picasso.with(getActivity()).load(Utility.getBitmapFile(getActivity(), "img_" + mMovie.getId() + ".png"))
+                        .into(moviePoster);
+            } else {
+
+                String imageUrl = Utility.POSTER_ROOT + mMovie.getPoster();
+                Picasso.with(getActivity()).load(imageUrl).placeholder(R.drawable.abc_ic_menu_selectall_mtrl_alpha).into(moviePoster);
+
+            }
 
             movieOverview.setText(mMovie.getOverview());
 
@@ -178,18 +187,36 @@ public class DetailFragment extends Fragment {
                     if (!isFavourite) {
 
                         getActivity().getContentResolver().insert(MoviesContract.MovieEntry.CONTENT_URI, Utility.getMovieContentValues(mMovie, getActivity()));
-                        Toast.makeText(getActivity(), "Marked as favourite", Toast.LENGTH_SHORT).show();
+                        getActivity().getContentResolver().bulkInsert(MoviesContract.TrailerEntry.CONTENT_URI, Utility.getTrailerContentValues(mMovie, getActivity()));
+                        getActivity().getContentResolver().bulkInsert(MoviesContract.ReviewEntry.CONTENT_URI, Utility.getReviewContentValues(mMovie, getActivity()));
+
+                        //using picasso to download the picture and storage it
+                        Picasso.with(getActivity()).load(Utility.POSTER_ROOT + mMovie.getPoster()).into(new BitmapTarget(getActivity(), mMovie.getId()));
+
+                        Toast.makeText(getActivity(), getString(R.string.favourites_save), Toast.LENGTH_SHORT).show();
                         markAsFavourite.setImageResource(R.drawable.unfav_btn);
                         isFavourite = true;
                     } else {
 
-                        getActivity().getContentResolver().delete(MoviesContract.MovieEntry.buildMovieUri(mMovie.getId()), null, null);
-                        Toast.makeText(getActivity(), "Removed from favourites", Toast.LENGTH_SHORT).show();
+                        getActivity().getContentResolver().delete(MoviesContract.MovieEntry.CONTENT_URI,
+                                MoviesContract.MovieEntry.COLUMN_MOVIE_ID + " = ?",
+                                new String[]{String.valueOf(mMovie.getId())});
+                        getActivity().getContentResolver().delete(MoviesContract.TrailerEntry.CONTENT_URI,
+                                MoviesContract.TrailerEntry.COLUMN_MOVIE_KEY + " = ?",
+                                new String[]{String.valueOf(mMovie.getId())});
+                        getActivity().getContentResolver().delete(MoviesContract.ReviewEntry.CONTENT_URI,
+                                MoviesContract.ReviewEntry.COLUMN_MOVIE_KEY + " = ?",
+                                new String[]{String.valueOf(mMovie.getId())});
+                        Toast.makeText(getActivity(), getString(R.string.favourites_delete), Toast.LENGTH_SHORT).show();
 
                         markAsFavourite.setImageResource(R.drawable.fav_btn);
                         isFavourite = false;
+
+                        Utility.deleteExternalStoragePrivateFile(getActivity(), "img_" + mMovie.getId() + ".png");
                     }
 
+                    if (mCallback != null)
+                        mCallback.onFavouriteItem(isFavourite);
 
                 }
 
@@ -219,5 +246,9 @@ public class DetailFragment extends Fragment {
             isFavourite = true;
 
         return isFavourite;
+    }
+
+    public void setTwoPanel(Callback callback) {
+        mCallback = callback;
     }
 }

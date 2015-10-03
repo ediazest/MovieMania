@@ -54,6 +54,7 @@ public class TestUtilities extends AndroidTestCase {
         movieValues.put(MovieEntry.COLUMN_MOVIE_RATING, 7.5);
         movieValues.put(MovieEntry.COLUMN_MOVIE_RELEASE, "2015");
         movieValues.put(MovieEntry.COLUMN_MOVIE_TITLE, "Awesome title");
+        movieValues.put(MoviesContract.MovieEntry.COLUMN_MOVIE_RUNTIME, 120);
 
 
         return movieValues;
